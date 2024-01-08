@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer</title>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f2f2f2;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pdfCanvas"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('http://localhost:3000/getpdf')
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => displayPDF(arrayBuffer));
+
+            function displayPDF(arrayBuffer) {
+                pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function(pdf) {
+                    var currentPage = getCurrentPage();
+                    
+                    pdf.getPage(currentPage).then(function(page) {
+                        var scale = 1.5;
+                        var viewport = page.getViewport({ scale: scale });
+
+                        var canvas = document.getElementById("pdfCanvas");
+                        var context = canvas.getContext("2d");
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        var renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+
+                        page.render(renderContext);
+                    });
+                });
+            }
+
+            function getCurrentPage() {
+                var dayOfWeek = new Date().getDay() ;
+            
+                var pageMap = {
+                    1: 2, // Lundi
+                    2: 3, // Mardi
+                    3: 4, // Mercredi
+                    4: 5, // Jeudi
+                    5: 6, // vendredi
+                };
+
+                return pageMap[dayOfWeek] || 1; // ne pas prendre en compte page 1
+            }
+        });
+    </script>
+</body>
+</html>
